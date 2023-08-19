@@ -1,5 +1,5 @@
 //The code begins
-var finishLine, coinGroup, coneGroup
+var finishLine, coinGroup, coneGroup, pb
 function preload() {
   raceTrack = loadImage("track.jpg")
   car = loadImage("car.png")
@@ -10,6 +10,7 @@ function preload() {
 //function setup
 function setup() {
   createCanvas(1024, 200)
+  flag = false
   //track creation 
   track = createSprite(width * 2, height / 2, width * 4, height)
   track.addImage(raceTrack)
@@ -26,6 +27,9 @@ function setup() {
   pb = createSprite(width / 2, height / 2)
   pb.addImage(pbImg)
   pb.scale = 0.05
+  pb.visible = true
+
+
 
   //cone creation
   coneGroup = new Group()
@@ -53,40 +57,33 @@ function setup() {
 
   coinGroup = new Group()
 
-  for (i = 130; i <= 900; i = i + 50) {
-    coin1 = createSprite(i, height - 50)
-    coinGroup.add(coin1)
-    coin1.addImage(coinImg)
-    coin1.scale = .15
-  }
-
-  for (i = 130; i <= 900; i = i + 50) {
-    coin1 = createSprite(i, height - 150)
-    coinGroup.add(coin1)
-    coin1.addImage(coinImg)
-    coin1.scale = .15
-  }
 
   score = 0
-  end = createSprite(1000, height / 2, 50, 100)
+  end = createSprite(1000, height / 2, 50, height)
   end.visible = false
 }
 //function draw
 function draw() {
+
   drawSprites()
+
   textSize(24)
   fill("yellow")
   text("score =" + score, width - 250, height - 170)
-//waiting
+  //waiting
   if (gameState === "wait") {
     pb.visible = true
-
+    fill("red")
+    textSize(30)
+    text("driving test", 150, height - 150)
     if (mousePressedOver(pb)) {
+      coinReset()
       gameState = "play"
     }
   }
-//playing
+  //playing
   else if (gameState === "play") {
+
     pb.visible = false
 
     if (keyDown("right")) {
@@ -100,46 +97,59 @@ function draw() {
     }
 
     if (car1.isTouching(end)) {
+      console.log("yes")
+      car1.setVelocity(0, 0)
+      coinGroup.destroyEach()
+      flag = true
+      if (score > 16) {
+        gameState = "win"
+      }
+      else {
+        gameState = "over"
+      }
+    }
+    if (car1.isTouching(coneGroup)) {
+
       gameState = "over"
     }
-    else if (car1.isTouching(coneGroup)) {
+    car1.overlap(coinGroup, destroyCoin)
+    if (score === 5) {
+      car1.velocityX = 9
+      textSize(40)
       fill("red")
-      textSize(60)
-      text("Try Again", 400, height / 2)
-      gameState = "over"
+      text("LEVEL UP!", width / 2, height / 2)
     }
+
+
   }
-//finishing
+  //finishing
   else if (gameState === "over") {
+    reset()
+    if (score <= 16 && flag === true) {
+      textSize(12)
+      fill("yellow")
+      text("Coins should be greater than 16", 400, 50)
+    }
     car1.setVelocity(0, 0)
     coinGroup.destroyEach()
+
     if (keyDown("r")) {
       gameState = "wait"
       score = 0
       car1.x = 5
-      coinReset()
+
     }
-  }
 
-  if (score === 5) {
-    car1.velocityX = 9
+  }
+  else if (gameState = "win") {
+    fill("red")
     textSize(40)
-    fill("red")
-    text("LEVEL UP!", width / 2, height / 2)
-  }
-
-  if (score < 16 && gameState === "over") {
-    fill("red")
-    textSize(60)
-    text("Try Again", 400, height / 2)
-  }
-
-  else if (score > 16 && gameState === "over") {
-    fill("red")
-    textSize(60)
     text("You Win,Liscence Granted", 200, height / 2)
+    car1.setVelocity(0, 0)
+    coinGroup.destroyEach()   
+
   }
-  car1.overlap(coinGroup, destroyCoin)
+
 
 }
 
@@ -164,4 +174,11 @@ function coinReset() {
   }
 }
 
-
+function reset() {
+  fill("red")
+  textSize(40)
+  text("press R to restart", 400, height / 2 + 50)
+  fill("red")
+  textSize(30)
+  text("Try Again", 400, height / 2)
+}
